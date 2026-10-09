@@ -1,0 +1,39 @@
+CORBE — test privé du complément de signature Outlook Mobile (Android)
+==========================================================================
+
+IMPORTANT
+- Ce dossier est une base de test, pas encore déployable tel quel.
+- Le fichier manifest.xml contient deux URL temporaires :
+  https://VOTRE-NOM.github.io/corbe-mobile-test/mobile.html
+  https://VOTRE-NOM.github.io/corbe-mobile-test/mobile.js
+  Il faudra remplacer VOTRE-NOM par le nom du compte GitHub qui hébergera les fichiers.
+- Ne modifiez pas le complément existant : utilisez une COPIE de travail.
+- Le test ne désactive pas la signature native dans les paramètres Outlook.
+  Cependant, quand le complément s'exécute, il remplace la signature visible dans le
+  brouillon par le texte de test. Fermez le brouillon sans l'envoyer.
+- Ne déployez qu'à votre propre compte de test, jamais à tous les utilisateurs.
+
+Fichiers
+--------
+manifest.xml : manifeste de test avec activation mobile OnNewMessageCompose.
+mobile.html  : page de démarrage du runtime.
+mobile.js    : ajoute la signature temporaire « CORBE — TEST ANDROID ».
+
+Étapes générales (ne pas lancer le déploiement avant l'hébergement HTTPS)
+---------------------------------------------------------------------------
+1. Créez un dépôt GitHub privé/public nommé exactement corbe-mobile-test.
+   Pour GitHub Pages, le dépôt doit être public sur le plan gratuit.
+2. Déposez mobile.html et mobile.js à la racine du dépôt.
+3. Activez Settings > Pages > Deploy from a branch > main > /(root).
+4. Attendez que l'URL https://VOTRE-NOM.github.io/corbe-mobile-test/mobile.html
+   fonctionne dans un navigateur.
+5. Remplacez VOTRE-NOM dans manifest.xml par le nom GitHub exact.
+6. Dans le Centre d'administration Microsoft 365, déployez le manifeste uniquement
+   à votre compte de test (utilisateurs/groupes spécifiques), pas à toute l'organisation.
+7. Redémarrez Outlook sur Android, créez un nouveau message, vérifiez la signature de test,
+   puis fermez le brouillon sans l'envoyer.
+8. Pour revenir en arrière, retirez le complément de votre compte de test dans le
+   Centre d'administration Microsoft 365. Votre signature native enregistrée reste inchangée.
+
+Documentation Microsoft :
+https://learn.microsoft.com/office/dev/add-ins/outlook/mobile-event-based
