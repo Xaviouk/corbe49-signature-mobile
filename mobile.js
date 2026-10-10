@@ -1,10 +1,31 @@
-/* CORBE 49 — signature mobile dynamique (test sur le compte Xavier)
- * Les champs de profil de base sont lus depuis Outlook.
- * Le poste et le téléphone sont récupérés via Microsoft Graph si le SSO et les permissions Graph
- * sont configurés dans le manifeste / l'inscription Entra de l'add-in. Sinon, valeurs de secours.
- * Garder ce fichier sur GitHub Pages avec mobile.html et le manifeste déjà déployé.
+/* CORBÉ 49 — Signature mobile dynamique
+ * Récupère le profil Microsoft 365 via Microsoft Graph avec MSAL Nested App Authentication.
+ * En cas d'échec d'authentification, conserve les informations Outlook disponibles sans inventer de fonction ni de téléphone.
  */
 Office.onReady();
+
+const CORBE_AUTH = {
+  clientId: "11d4d023-0187-483e-aa31-9b3f55153aee",
+  authority: "https://login.microsoftonline.com/75b354dc-0810-4caa-90a3-ac64ef88c77a",
+  redirectUri: "https://xaviouk.github.io/corbe49-signature-mobile/auth.html"
+};
+let corbePcaPromise;
+async function getCorbePca() {
+  if (!window.msal || !window.msal.createNestablePublicClientApplication) {
+    throw new Error("La bibliothèque MSAL NAA n'a pas été chargée.");
+  }
+  if (!corbePcaPromise) {
+    corbePcaPromise = window.msal.createNestablePublicClientApplication({
+      auth: {
+        clientId: CORBE_AUTH.clientId,
+        authority: CORBE_AUTH.authority,
+        redirectUri: CORBE_AUTH.redirectUri
+      },
+      cache: { cacheLocation: "localStorage" }
+    });
+  }
+  return corbePcaPromise;
+}
 
 const corbeSignatureTemplate = String.raw`<!DOCTYPE html>
 <html lang="fr">
@@ -308,26 +329,26 @@ function splitName(displayName, email) {
   return local.replace(/\b\w/g, c => c.toUpperCase());
 }
 async function getGraphProfile() {
-  // This works only after SSO has been configured for the add-in and the Entra app has
-  // the appropriate delegated Microsoft Graph permissions (User.Read).
   try {
-    if (!Office.auth || !Office.auth.getAccessToken) return null;
-    const token = await Office.auth.getAccessToken({ allowSignInPrompt: false, allowConsentPrompt: false });
+    const pca = await getCorbePca();
+    const result = await pca.acquireTokenSilent({ scopes: ["User.Read"] });
     const response = await fetch("https://graph.microsoft.com/v1.0/me?$select=displayName,jobTitle,mail,userPrincipalName,mobilePhone,businessPhones", {
-      headers: { Authorization: "Bearer " + token }
+      headers: { Authorization: "Bearer " + result.accessToken }
     });
-    if (!response.ok) return null;
+    if (!response.ok) throw new Error("Microsoft Graph a répondu " + response.status);
     return await response.json();
   } catch (e) {
-    console.log("Profil Graph indisponible, utilisation du profil Outlook et des valeurs de secours.", e);
+    // Un événement de composition ne doit pas ouvrir de fenêtre interactive. La signature
+    // reste utilisable avec les champs Outlook disponibles, et les champs Graph restent vides.
+    console.warn("Profil Graph indisponible en mode silencieux.", e);
     return null;
   }
 }
 function renderSignature(profile, graph) {
   const email = String((graph && (graph.mail || graph.userPrincipalName)) || profile.emailAddress || "").trim().toLowerCase();
   const displayName = splitName((graph && graph.displayName) || profile.displayName, email);
-  const jobTitle = (graph && graph.jobTitle) || "Responsable SAV"; // secours temporaire si Graph n'est pas configuré
-  const phoneRaw = (graph && graph.mobilePhone) || (graph && graph.businessPhones && graph.businessPhones[0]) || "06 28 96 01 12"; // secours temporaire si Graph n'est pas configuré
+  const jobTitle = String((graph && graph.jobTitle) || "").trim();
+  const phoneRaw = String((graph && graph.mobilePhone) || (graph && graph.businessPhones && graph.businessPhones[0]) || "").trim();
   const phone = formatPhone(phoneRaw);
   const phoneDigits = digits(phoneRaw);
   const photoUrl = email ? "https://www.corbe-cuisine-pro.com/wp-content/uploads/" + encodeURIComponent(email) + "_.png" : "https://www.corbe-cuisine-pro.com/wp-content/uploads/xavier.gaillard@corbe49.fr_.png";

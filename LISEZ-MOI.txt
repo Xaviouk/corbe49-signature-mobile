@@ -1,39 +1,27 @@
-CORBE — test privé du complément de signature Outlook Mobile (Android)
-==========================================================================
+# CORBÉ 49 — Signature mobile (préparation de test)
 
-IMPORTANT
-- Ce dossier est une base de test, pas encore déployable tel quel.
-- Le fichier manifest.xml contient deux URL temporaires :
-  https://VOTRE-NOM.github.io/corbe-mobile-test/mobile.html
-  https://VOTRE-NOM.github.io/corbe-mobile-test/mobile.js
-  Il faudra remplacer VOTRE-NOM par le nom du compte GitHub qui hébergera les fichiers.
-- Ne modifiez pas le complément existant : utilisez une COPIE de travail.
-- Le test ne désactive pas la signature native dans les paramètres Outlook.
-  Cependant, quand le complément s'exécute, il remplace la signature visible dans le
-  brouillon par le texte de test. Fermez le brouillon sans l'envoyer.
-- Ne déployez qu'à votre propre compte de test, jamais à tous les utilisateurs.
+Cette archive est une **version de préparation**. Elle n'a pas été déployée ni testée dans Outlook.
 
-Fichiers
---------
-manifest.xml : manifeste de test avec activation mobile OnNewMessageCompose.
-mobile.html  : page de démarrage du runtime.
-mobile.js    : ajoute la signature temporaire « CORBE — TEST ANDROID ».
+## Fichiers
+- `mobile.html` : charge Office.js et MSAL Browser.
+- `mobile.js` : modèle HTML de signature existant, authentification NAA silencieuse et récupération Graph du profil.
+- `auth.html` : page de redirection HTTPS de MSAL.
+- `manifest.xml` : manifeste mis à jour, même ID de complément et version 1.0.1.0.
 
-Étapes générales (ne pas lancer le déploiement avant l'hébergement HTTPS)
----------------------------------------------------------------------------
-1. Créez un dépôt GitHub privé/public nommé exactement corbe-mobile-test.
-   Pour GitHub Pages, le dépôt doit être public sur le plan gratuit.
-2. Déposez mobile.html et mobile.js à la racine du dépôt.
-3. Activez Settings > Pages > Deploy from a branch > main > /(root).
-4. Attendez que l'URL https://VOTRE-NOM.github.io/corbe-mobile-test/mobile.html
-   fonctionne dans un navigateur.
-5. Remplacez VOTRE-NOM dans manifest.xml par le nom GitHub exact.
-6. Dans le Centre d'administration Microsoft 365, déployez le manifeste uniquement
-   à votre compte de test (utilisateurs/groupes spécifiques), pas à toute l'organisation.
-7. Redémarrez Outlook sur Android, créez un nouveau message, vérifiez la signature de test,
-   puis fermez le brouillon sans l'envoyer.
-8. Pour revenir en arrière, retirez le complément de votre compte de test dans le
-   Centre d'administration Microsoft 365. Votre signature native enregistrée reste inchangée.
+## Avant de déployer
+1. Garder le complément actuellement déployé en place comme retour arrière.
+2. Publier ces fichiers dans le dépôt `Xaviouk/corbe49-signature-mobile` (ne pas supprimer l'ancien contenu avant sauvegarde).
+3. Dans Entra ID > `CORBE49-Signature-Mobile` > Authentification > SPA, conserver `brk-multihub://xaviouk.github.io` et ajouter aussi :
+   `https://xaviouk.github.io/corbe49-signature-mobile/auth.html`
+4. Confirmer que Microsoft Graph > autorisation déléguée `User.Read` est présente.
+5. Valider le manifeste dans le validateur de manifeste Office, puis mettre à jour le complément existant avec ce `manifest.xml`.
+6. Tester sur le compte Xavier avant toute diffusion. Si l'acquisition silencieuse du jeton échoue, la signature utilisera le nom et l'adresse e-mail accessibles via Outlook, mais les champs fonction/téléphone resteront vides ; il faudra diagnostiquer l'authentification NAA.
 
-Documentation Microsoft :
-https://learn.microsoft.com/office/dev/add-ins/outlook/mobile-event-based
+## Comportement des champs
+- Fonction : vide si Graph ne renvoie aucune fonction.
+- Téléphone : mobile en priorité, puis premier téléphone professionnel ; vide si aucun n'est disponible.
+- Photo : URL calculée depuis l'adresse e-mail selon la convention déjà utilisée.
+- Le code n'ouvre pas de fenêtre de connexion interactive pendant l'événement de composition.
+
+## Important
+Cette version n'a pas été exécutée dans Outlook ni validée contre le tenant. Ne la déployez pas à l'échelle de l'entreprise avant le test individuel.

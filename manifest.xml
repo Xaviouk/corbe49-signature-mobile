@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides"
+  xsi:type="MailApp">
+  <Id>8F3E5D77-6C39-4A8D-9F29-4E7E4E8B6D12</Id>
+  <Version>1.0.1.0</Version>
+  <ProviderName>CORBÉ 49</ProviderName>
+  <DefaultLocale>fr-FR</DefaultLocale>
+  <DisplayName DefaultValue="CORBÉ 49 — Signature mobile"/>
+  <Description DefaultValue="Complément Outlook mobile permettant d’insérer automatiquement la signature CORBÉ 49."/>
+  <IconUrl DefaultValue="https://officedev.github.io/Office-Add-in-samples/Samples/outlook-set-signature/assets/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://officedev.github.io/Office-Add-in-samples/Samples/outlook-set-signature/assets/icon-128.png"/>
+  <SupportUrl DefaultValue="https://learn.microsoft.com/fr-fr/office/dev/add-ins/outlook/mobile-event-based"/>
+  <AppDomains>
+    <AppDomain>https://xaviouk.github.io</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.1">
+      <Set Name="Mailbox"/>
+    </Sets>
+  </Requirements>
+  <FormSettings>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://xaviouk.github.io/corbe49-signature-mobile/mobile.html"/>
+        <RequestedHeight>250</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+  <Permissions>ReadWriteMailbox</Permissions>
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+  </Rule>
+  <DisableEntityHighlighting>true</DisableEntityHighlighting>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
+      <Description resid="residAppDesc"/>
+      <Requirements>
+        <bt:Sets DefaultMinVersion="1.5">
+          <bt:Set Name="Mailbox"/>
+        </bt:Sets>
+      </Requirements>
+      <Hosts>
+        <Host xsi:type="MailHost">
+          <Runtimes>
+            <Runtime resid="Autorun">
+              <Override type="javascript" resid="runtimeJs"/>
+            </Runtime>
+          </Runtimes>
+          <DesktopFormFactor>
+            <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+              <OfficeTab id="TabDefault">
+                <Group id="corbe49Group">
+                  <Label resid="residGroupLabel"/>
+                  <Control xsi:type="Button" id="corbe49Button">
+                    <Label resid="residButtonLabel"/>
+                    <Supertip>
+                      <Title resid="residButtonLabel"/>
+                      <Description resid="residButtonDescription"/>
+                    </Supertip>
+                    <Icon>
+                      <bt:Image size="16" resid="Icon16x16"/>
+                      <bt:Image size="32" resid="Icon32x32"/>
+                      <bt:Image size="80" resid="Icon80x80"/>
+                    </Icon>
+                    <Action xsi:type="ShowTaskpane">
+                      <SourceLocation resid="taskpaneUrl"/>
+                    </Action>
+                  </Control>
+                </Group>
+              </OfficeTab>
+            </ExtensionPoint>
+          </DesktopFormFactor>
+          <MobileFormFactor>
+            <ExtensionPoint xsi:type="LaunchEvent">
+              <LaunchEvents>
+                <LaunchEvent Type="OnNewMessageCompose" FunctionName="onNewMessageComposeHandler"/>
+              </LaunchEvents>
+              <SourceLocation resid="Autorun"/>
+            </ExtensionPoint>
+          </MobileFormFactor>
+        </Host>
+      </Hosts>
+      <Resources>
+        <bt:Images>
+          <bt:Image id="Icon16x16" DefaultValue="https://officedev.github.io/Office-Add-in-samples/Samples/outlook-set-signature/assets/icon-16.png"/>
+          <bt:Image id="Icon32x32" DefaultValue="https://officedev.github.io/Office-Add-in-samples/Samples/outlook-set-signature/assets/icon-32.png"/>
+          <bt:Image id="Icon80x80" DefaultValue="https://officedev.github.io/Office-Add-in-samples/Samples/outlook-set-signature/assets/icon-80.png"/>
+        </bt:Images>
+        <bt:Urls>
+          <bt:Url id="taskpaneUrl" DefaultValue="https://xaviouk.github.io/corbe49-signature-mobile/mobile.html"/>
+          <bt:Url id="Autorun" DefaultValue="https://xaviouk.github.io/corbe49-signature-mobile/mobile.html"/>
+          <bt:Url id="runtimeJs" DefaultValue="https://xaviouk.github.io/corbe49-signature-mobile/mobile.js"/>
+        </bt:Urls>
+        <bt:ShortStrings>
+          <bt:String id="residGroupLabel" DefaultValue="CORBÉ 49"/>
+          <bt:String id="residButtonLabel" DefaultValue="Signature CORBÉ 49"/>
+        </bt:ShortStrings>
+        <bt:LongStrings>
+          <bt:String id="residAppDesc" DefaultValue="Complément Outlook mobile permettant d’insérer automatiquement la signature CORBÉ 49."/>
+          <bt:String id="residButtonDescription" DefaultValue="Ouvre le complément de signature CORBÉ 49."/>
+        </bt:LongStrings>
+      </Resources>
+    </VersionOverrides>
+  </VersionOverrides>
+</OfficeApp>
