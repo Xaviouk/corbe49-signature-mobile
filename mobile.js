@@ -1,12 +1,20 @@
-/*
- * CORBE - Signature mobile test (Xavier only)
- * Signature source: Signature2026Corbe49_Xavier_V57 APERCU.htm
- * This replaces the body signature in a newly composed message.
- * It does not change Outlook's saved native signature settings.
+/* CORBE 49 — signature mobile dynamique (test sur le compte Xavier)
+ * Les champs de profil de base sont lus depuis Outlook.
+ * Le poste et le téléphone sont récupérés via Microsoft Graph si le SSO et les permissions Graph
+ * sont configurés dans le manifeste / l'inscription Entra de l'add-in. Sinon, valeurs de secours.
+ * Garder ce fichier sur GitHub Pages avec mobile.html et le manifeste déjà déployé.
  */
 Office.onReady();
 
-const corbeSignatureHtml = String.raw`<!-- V53 = V52 + largeur de la photo verrouillée (cellule et image : 78px minimum et maximum) : sur mobile, la photo était réduite et écrasée car c'est la seule colonne qui pouvait rétrécir.
+const corbeSignatureTemplate = String.raw`<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Signature2026Corbe49</title>
+</head>
+<body style="margin:0;padding:0;background:transparent;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+
+<!-- V53 = V52 + largeur de la photo verrouillée (cellule et image : 78px minimum et maximum) : sur mobile, la photo était réduite et écrasée car c'est la seule colonne qui pouvait rétrécir.
      V52 = V51 + espace insécable entre prénom et nom (le nom ne passe plus sur deux lignes sur mobile) + blocage de la mise à l'échelle du texte.
      V51 = V50 + hauteurs de ligne exactes sur les images et les textes des coordonnées (Outlook ajoutait de la hauteur sous les images et autour des textes).
      V50 : CONSTRUCTION SANS CELLULE FINE
@@ -29,8 +37,8 @@ const corbeSignatureHtml = String.raw`<!-- V53 = V52 + largeur de la photo verro
 <td width="78" valign="top" nowrap
     style="width:78px;min-width:78px;max-width:78px;padding:0 10px 0 20px;white-space:nowrap;">
   <div style="font-size:0;line-height:0;width:78px;height:108px;overflow:hidden;">
-    <img src="https://www.corbe-cuisine-pro.com/wp-content/uploads/xavier.gaillard@corbe49.fr_.png"
-         alt="Xavier Gaillard" width="78" height="108"
+    <img src="{{PHOTO_URL}}"
+         alt="{{DISPLAY_NAME_HTML}}" width="78" height="108"
          style="display:block;width:78px;height:108px;border:0;margin:0;padding:0;
                 max-width:none;max-height:none;min-width:0;min-height:0;
                 -ms-interpolation-mode:bicubic;">
@@ -52,7 +60,7 @@ const corbeSignatureHtml = String.raw`<!-- V53 = V52 + largeur de la photo verro
               <div style="font-family:'Trebuchet MS',Arial,Helvetica,sans-serif;
                           font-size:18px;line-height:18px;mso-line-height-rule:exactly;font-weight:800;
                           white-space:nowrap;color:#202c39;margin:0;">
-                Xavier&nbsp;GAILLARD
+                {{DISPLAY_NAME_HTML}}
               </div>
             </td>
           </tr>
@@ -62,7 +70,7 @@ const corbeSignatureHtml = String.raw`<!-- V53 = V52 + largeur de la photo verro
               <div style="font-family:'Trebuchet MS',Arial,Helvetica,sans-serif;
                           font-size:10px;line-height:12px;mso-line-height-rule:exactly;font-weight:400;
                           letter-spacing:2px;color:#3e4650;margin:0 0 0 2px;white-space:nowrap;">
-                Responsable SAV
+                {{JOB_TITLE_HTML}}
               </div>
             </td>
           </tr>
@@ -115,8 +123,8 @@ const corbeSignatureHtml = String.raw`<!-- V53 = V52 + largeur de la photo verro
             </td>
             <td valign="middle" style="padding:0 0 12px 0;font-size:10px;line-height:1.1;
                                         font-weight:400;white-space:nowrap;">
-              <div style="font-size:10px;line-height:12px;mso-line-height-rule:exactly;white-space:nowrap;"><a href="mailto:xavier.gaillard@corbe49.fr" style="color:#202c39;text-decoration:none;">
-                xavier.gaillard@corbe49.fr
+              <div style="font-size:10px;line-height:12px;mso-line-height-rule:exactly;white-space:nowrap;"><a href="mailto:{{EMAIL_ATTR}}" style="color:#202c39;text-decoration:none;">
+                {{EMAIL_HTML}}
               </a></div>
             </td>
           </tr>
@@ -142,8 +150,8 @@ const corbeSignatureHtml = String.raw`<!-- V53 = V52 + largeur de la photo verro
             </td>
             <td valign="middle" style="padding:0 0 11px 0;font-size:10px;line-height:1.1;
                                         font-weight:700;white-space:nowrap;">
-              <div style="font-size:10px;line-height:12px;mso-line-height-rule:exactly;white-space:nowrap;"><a href="tel:0628960112" style="color:#E30613;text-decoration:none;">
-                06 28 96 01 12
+              <div style="font-size:10px;line-height:12px;mso-line-height-rule:exactly;white-space:nowrap;"><a href="tel:{{PHONE_DIGITS}}" style="color:#E30613;text-decoration:none;">
+                {{PHONE_HTML}}
               </a></div>
             </td>
           </tr>
@@ -154,7 +162,7 @@ const corbeSignatureHtml = String.raw`<!-- V53 = V52 + largeur de la photo verro
                    alt="Contact" width="14" style="display:block;width:14px;height:auto;border:0;"></div>
             </td>
             <td valign="middle" style="padding:0;font-size:10px;line-height:1.1;font-weight:700;white-space:nowrap;">
-              <div style="font-size:10px;line-height:12px;mso-line-height-rule:exactly;white-space:nowrap;"><a href="https://www.corbe-cuisine-pro.com/wp-content/uploads/xavier.gaillard@corbe49.fr.vcf" target="_blank" style="color:#E30613;text-decoration:none;">
+              <div style="font-size:10px;line-height:12px;mso-line-height-rule:exactly;white-space:nowrap;"><a href="https://www.corbe-cuisine-pro.com/vcf/49/{{EMAIL_ATTR}}.vcf" target="_blank" style="color:#E30613;text-decoration:none;">
                 Ajouter ce contact
               </a></div>
             </td>
@@ -277,20 +285,84 @@ const corbeSignatureHtml = String.raw`<!-- V53 = V52 + largeur de la photo verro
 </td>
 
 </tr>
-</table>`;
+</table>
+
+</body>
+</html>
+`;
+
+function escapeHtml(value) {
+  return String(value || "").replace(/[&<>\"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+}
+function digits(value) { return String(value || "").replace(/\D/g, ""); }
+function formatPhone(value) {
+  const d = digits(value);
+  if (d.length === 10) return d.match(/.{1,2}/g).join(" ");
+  if (d.length === 11 && d.startsWith("33")) return "0" + d.slice(2).match(/.{1,2}/g).join(" ");
+  return value || "";
+}
+function splitName(displayName, email) {
+  const cleaned = String(displayName || "").trim();
+  if (cleaned) return cleaned;
+  const local = String(email || "").split("@")[0].replace(/[._-]+/g, " ").trim();
+  return local.replace(/\b\w/g, c => c.toUpperCase());
+}
+async function getGraphProfile() {
+  // This works only after SSO has been configured for the add-in and the Entra app has
+  // the appropriate delegated Microsoft Graph permissions (User.Read).
+  try {
+    if (!Office.auth || !Office.auth.getAccessToken) return null;
+    const token = await Office.auth.getAccessToken({ allowSignInPrompt: false, allowConsentPrompt: false });
+    const response = await fetch("https://graph.microsoft.com/v1.0/me?$select=displayName,jobTitle,mail,userPrincipalName,mobilePhone,businessPhones", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (e) {
+    console.log("Profil Graph indisponible, utilisation du profil Outlook et des valeurs de secours.", e);
+    return null;
+  }
+}
+function renderSignature(profile, graph) {
+  const email = String((graph && (graph.mail || graph.userPrincipalName)) || profile.emailAddress || "").trim().toLowerCase();
+  const displayName = splitName((graph && graph.displayName) || profile.displayName, email);
+  const jobTitle = (graph && graph.jobTitle) || "Responsable SAV"; // secours temporaire si Graph n'est pas configuré
+  const phoneRaw = (graph && graph.mobilePhone) || (graph && graph.businessPhones && graph.businessPhones[0]) || "06 28 96 01 12"; // secours temporaire si Graph n'est pas configuré
+  const phone = formatPhone(phoneRaw);
+  const phoneDigits = digits(phoneRaw);
+  const photoUrl = email ? "https://www.corbe-cuisine-pro.com/wp-content/uploads/" + encodeURIComponent(email) + "_.png" : "https://www.corbe-cuisine-pro.com/wp-content/uploads/xavier.gaillard@corbe49.fr_.png";
+  const replacements = {
+    "{{PHOTO_URL}}": photoUrl,
+    "{{DISPLAY_NAME_HTML}}": escapeHtml(displayName).replace(/ /g, "&nbsp;"),
+    "{{JOB_TITLE_HTML}}": escapeHtml(jobTitle),
+    "{{EMAIL_ATTR}}": email,
+    "{{EMAIL_HTML}}": escapeHtml(email),
+    "{{PHONE_DIGITS}}": phoneDigits,
+    "{{PHONE_HTML}}": escapeHtml(phone)
+  };
+  let html = corbeSignatureTemplate;
+  for (const [key, value] of Object.entries(replacements)) html = html.split(key).join(value);
+  return html;
+}
 
 function onNewMessageComposeHandler(event) {
   const item = Office.context.mailbox.item;
-  item.body.setSignatureAsync(
-    corbeSignatureHtml,
-    { coercionType: Office.CoercionType.Html },
-    function (result) {
+  const profile = Office.context.mailbox.userProfile || {};
+  getGraphProfile().then(graph => {
+    const signatureHtml = renderSignature(profile, graph);
+    item.body.setSignatureAsync(signatureHtml, { coercionType: Office.CoercionType.Html }, result => {
       if (result.status === Office.AsyncResultStatus.Failed) {
-        console.log("Échec insertion signature CORBE : " + result.error.message);
+        console.log("Échec ajout signature CORBE 49 : " + result.error.message);
       }
       event.completed();
-    }
-  );
+    });
+  }).catch(error => {
+    console.log("Erreur de préparation signature CORBE 49 :", error);
+    const signatureHtml = renderSignature(profile, null);
+    item.body.setSignatureAsync(signatureHtml, { coercionType: Office.CoercionType.Html }, result => {
+      if (result.status === Office.AsyncResultStatus.Failed) console.log(result.error.message);
+      event.completed();
+    });
+  });
 }
-
 Office.actions.associate("onNewMessageComposeHandler", onNewMessageComposeHandler);
