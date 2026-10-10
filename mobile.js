@@ -10,10 +10,35 @@ const CORBE_AUTH = {
   redirectUri: "https://xaviouk.github.io/corbe49-signature-mobile/auth.html"
 };
 let corbePcaPromise;
-async function getCorbePca() {
-  if (!window.msal || !window.msal.createNestablePublicClientApplication) {
-    throw new Error("La bibliothèque MSAL NAA n'a pas été chargée.");
+async function ensureMsalLoaded() {
+  if (window.msal && window.msal.createNestablePublicClientApplication) return;
+  // Le runtime d’événement Outlook peut exécuter mobile.js sans avoir exécuté
+  // les balises <script> de mobile.html. Charger MSAL explicitement dans ce runtime.
+  if (typeof document === "undefined") {
+    throw new Error("Impossible de charger MSAL : aucun document disponible dans le runtime Outlook.");
   }
+  await new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-corbe-msal="true"]');
+    if (existing) {
+      if (window.msal && window.msal.createNestablePublicClientApplication) return resolve();
+      existing.addEventListener("load", resolve, { once: true });
+      existing.addEventListener("error", () => reject(new Error("Échec du chargement de MSAL Browser.")), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://alcdn.msauth.net/browser/4.26.0/js/msal-browser.min.js";
+    script.async = true;
+    script.dataset.corbeMsal = "true";
+    script.onload = resolve;
+    script.onerror = () => reject(new Error("Échec du chargement de MSAL Browser."));
+    document.head.appendChild(script);
+  });
+  if (!window.msal || !window.msal.createNestablePublicClientApplication) {
+    throw new Error("MSAL a été chargé, mais NAA n’est pas disponible dans cette version.");
+  }
+}
+async function getCorbePca() {
+  await ensureMsalLoaded();
   if (!corbePcaPromise) {
     corbePcaPromise = window.msal.createNestablePublicClientApplication({
       auth: {

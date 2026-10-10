@@ -1,10 +1,10 @@
 # CORBÉ 49 — Signature mobile (préparation de test)
 
-Cette archive est une **version de préparation**. Elle n'a pas été déployée ni testée dans Outlook.
+Cette archive est une version de préparation. Elle n’a pas été déployée ni testée dans Outlook.
 
 ## Fichiers
 - `mobile.html` : charge Office.js et MSAL Browser.
-- `mobile.js` : modèle HTML de signature existant, authentification NAA silencieuse et récupération Graph du profil.
+- `mobile.js` : modèle HTML de signature existant, chargement explicite de MSAL dans le runtime, authentification NAA silencieuse et récupération Graph du profil.
 - `auth.html` : page de redirection HTTPS de MSAL.
 - `manifest.xml` : manifeste mis à jour, même ID de complément et version 1.0.1.0.
 
@@ -24,4 +24,4 @@ Cette archive est une **version de préparation**. Elle n'a pas été déployée
 - Le code n'ouvre pas de fenêtre de connexion interactive pendant l'événement de composition.
 
 ## Important
-Cette version n'a pas été exécutée dans Outlook ni validée contre le tenant. Ne la déployez pas à l'échelle de l'entreprise avant le test individuel.
+Cette version n’a pas été exécutée dans Outlook ni validée contre le tenant. Testez uniquement sur le compte prévu et vérifiez les résultats avant tout déploiement plus large.
