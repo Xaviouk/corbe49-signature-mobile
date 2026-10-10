@@ -1,27 +1,26 @@
-# CORBÉ 49 — Signature mobile (préparation de test)
+# CORBÉ 49 — Signature mobile dynamique
 
-Cette archive est une version de préparation. Elle n’a pas été déployée ni testée dans Outlook.
+Version 1.0.3.0 — fichiers corrigés pour la structure du complément Outlook mobile.
 
 ## Fichiers
-- `mobile.html` : charge Office.js et MSAL Browser.
-- `mobile.js` : modèle HTML de signature existant, chargement explicite de MSAL dans le runtime, authentification NAA silencieuse et récupération Graph du profil.
-- `auth.html` : page de redirection HTTPS de MSAL.
-- `manifest.xml` : manifeste mis à jour, même ID de complément et version 1.0.1.0.
+- `manifest.xml` : manifeste du complément Outlook, événement `OnNewMessageCompose`, runtime HTML `mobile.html`.
+- `mobile.html` : charge Office.js, MSAL Browser et explicitement `mobile.js`.
+- `mobile.js` : logique de signature CORBÉ 49 et récupération du profil via Microsoft Graph / MSAL NAA.
+- `auth.html` : page HTTPS associée à l’inscription SPA.
+- `README.md` : résumé du projet.
 
-## Avant de déployer
-1. Garder le complément actuellement déployé en place comme retour arrière.
-2. Publier ces fichiers dans le dépôt `Xaviouk/corbe49-signature-mobile` (ne pas supprimer l'ancien contenu avant sauvegarde).
-3. Dans Entra ID > `CORBE49-Signature-Mobile` > Authentification > SPA, conserver `brk-multihub://xaviouk.github.io` et ajouter aussi :
-   `https://xaviouk.github.io/corbe49-signature-mobile/auth.html`
-4. Confirmer que Microsoft Graph > autorisation déléguée `User.Read` est présente.
-5. Valider le manifeste dans le validateur de manifeste Office, puis mettre à jour le complément existant avec ce `manifest.xml`.
-6. Tester sur le compte Xavier avant toute diffusion. Si l'acquisition silencieuse du jeton échoue, la signature utilisera le nom et l'adresse e-mail accessibles via Outlook, mais les champs fonction/téléphone resteront vides ; il faudra diagnostiquer l'authentification NAA.
+## Publication GitHub
+1. Décompresser l’archive.
+2. Dans le dépôt `Xaviouk/corbe49-signature-mobile`, utiliser **Add file > Upload files** et téléverser les six fichiers à la racine, en remplaçant ceux portant le même nom.
+3. Commit directement sur `main`.
+4. Attendre la publication GitHub Pages puis vérifier `mobile.html` et `manifest.xml`.
 
-## Comportement des champs
-- Fonction : vide si Graph ne renvoie aucune fonction.
-- Téléphone : mobile en priorité, puis premier téléphone professionnel ; vide si aucun n'est disponible.
-- Photo : URL calculée depuis l'adresse e-mail selon la convention déjà utilisée.
-- Le code n'ouvre pas de fenêtre de connexion interactive pendant l'événement de composition.
+## Avant le test Outlook
+- Garder l’ancien complément en place tant que la nouvelle version n’a pas été testée.
+- L’inscription Entra doit conserver l’URI SPA `brk-multihub://xaviouk.github.io`.
+- Microsoft Graph `User.Read` déléguée doit être présente.
+- Le code tente l’obtention silencieuse du jeton pendant l’événement de composition. Il ne lance pas de connexion interactive dans cet événement. Si l’authentification silencieuse échoue, la signature utilise les données Outlook disponibles et certains champs Graph, notamment fonction/téléphone, peuvent rester vides.
+- Le code et le manifeste doivent encore être testés dans Outlook mobile : l’archive n’est pas une preuve de fonctionnement en production.
 
-## Important
-Cette version n’a pas été exécutée dans Outlook ni validée contre le tenant. Testez uniquement sur le compte prévu et vérifiez les résultats avant tout déploiement plus large.
+## Version
+Manifeste : `1.0.3.0`.

@@ -5,7 +5,7 @@
   xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides"
   xsi:type="MailApp">
   <Id>8F3E5D77-6C39-4A8D-9F29-4E7E4E8B6D12</Id>
-  <Version>1.0.2.0</Version>
+  <Version>1.0.3.0</Version>
   <ProviderName>CORBÉ 49</ProviderName>
   <DefaultLocale>fr-FR</DefaultLocale>
   <DisplayName DefaultValue="CORBÉ 49 — Signature mobile"/>
@@ -48,9 +48,7 @@
       <Hosts>
         <Host xsi:type="MailHost">
           <Runtimes>
-            <Runtime resid="Autorun">
-              <Override type="javascript" resid="runtimeJs"/>
-            </Runtime>
+            <Runtime resid="Autorun"/>
           </Runtimes>
           <DesktopFormFactor>
             <ExtensionPoint xsi:type="MessageComposeCommandSurface">
@@ -95,7 +93,6 @@
         <bt:Urls>
           <bt:Url id="taskpaneUrl" DefaultValue="https://xaviouk.github.io/corbe49-signature-mobile/mobile.html"/>
           <bt:Url id="Autorun" DefaultValue="https://xaviouk.github.io/corbe49-signature-mobile/mobile.html"/>
-          <bt:Url id="runtimeJs" DefaultValue="https://xaviouk.github.io/corbe49-signature-mobile/mobile.js"/>
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="residGroupLabel" DefaultValue="CORBÉ 49"/>
