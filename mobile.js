@@ -334,26 +334,57 @@ function renderSignature(profile) {
 }
 
 function onNewMessageComposeHandler(event) {
+  const item = Office.context.mailbox.item;
+
   try {
-    const item = Office.context.mailbox.item;
     const profile = Office.context.mailbox.userProfile || {};
     const signatureHtml = renderSignature(profile);
-    item.body.setSignatureAsync(signatureHtml, { coercionType: Office.CoercionType.Html }, result => {
-      if (result.status === Office.AsyncResultStatus.Failed) {
-        console.log("Échec ajout signature CORBE 49 : " + result.error.message);
+
+    item.body.setSignatureAsync(
+      signatureHtml,
+      { coercionType: Office.CoercionType.Html },
+      result => {
+        if (result.status === Office.AsyncResultStatus.Failed) {
+          const errorMessage = String(
+            (result.error && result.error.message) || "Erreur non détaillée"
+          );
+          const errorHtml =
+            '<div style="border:2px solid #e30613;padding:10px;' +
+            'background:#fff3cd;color:#202c39;font-family:Arial,sans-serif">' +
+            '<b>ERREUR SIGNATURE CORBÉ 49</b><br>' +
+            'Le complément s’est lancé, mais Outlook a refusé l’insertion : ' +
+            escapeHtml(errorMessage) +
+            '</div>';
+
+          item.body.setAsync(
+            errorHtml,
+            { coercionType: Office.CoercionType.Html },
+            () => event.completed()
+          );
+        } else {
+          event.completed();
+        }
       }
-      event.completed();
-    });
+    );
   } catch (error) {
-    console.log("Erreur de préparation signature CORBE 49 :", error);
-    // En cas d’erreur avant l’insertion, afficher quand même un message visible dans le brouillon.
+    const errorMessage = String((error && error.message) || error || "Erreur inconnue");
+    const errorHtml =
+      '<div style="border:2px solid #e30613;padding:10px;' +
+      'background:#fff3cd;color:#202c39;font-family:Arial,sans-serif">' +
+      '<b>ERREUR TECHNIQUE CORBÉ 49</b><br>' +
+      escapeHtml(errorMessage) +
+      '</div>';
+
     try {
-      Office.context.mailbox.item.body.setAsync(
-        '<div style="font-family:Arial,sans-serif;background:#f8d7da;border:2px solid #b02a37;padding:8px;color:#842029">TEST CORBÉ 49 : le gestionnaire s’est lancé, mais la signature a rencontré une erreur. Consulte les journaux du complément.</div>',
+      item.body.setAsync(
+        errorHtml,
         { coercionType: Office.CoercionType.Html },
         () => event.completed()
       );
-    } catch (_) { event.completed(); }
+    } catch (_) {
+      event.completed();
+    }
   }
 }
+
 Office.actions.associate("onNewMessageComposeHandler", onNewMessageComposeHandler);
