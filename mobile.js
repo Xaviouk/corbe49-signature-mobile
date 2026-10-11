@@ -1,56 +1,10 @@
-/* CORBÉ 49 — Signature mobile dynamique
- * Récupère le profil Microsoft 365 via Microsoft Graph avec MSAL Nested App Authentication.
- * En cas d'échec d'authentification, conserve les informations Outlook disponibles sans inventer de fonction ni de téléphone.
+/* CORBE 49 — signature mobile dynamique (test sur le compte Xavier)
+ * Les champs de profil de base sont lus depuis Outlook.
+ * Le poste et le téléphone sont récupérés via Microsoft Graph si le SSO et les permissions Graph
+ * sont configurés dans le manifeste / l'inscription Entra de l'add-in. Sinon, valeurs de secours.
+ * Garder ce fichier sur GitHub Pages avec mobile.html et le manifeste déjà déployé.
  */
 Office.onReady();
-
-const CORBE_AUTH = {
-  clientId: "11d4d023-0187-483e-aa31-9b3f55153aee",
-  authority: "https://login.microsoftonline.com/75b354dc-0810-4caa-90a3-ac64ef88c77a",
-  redirectUri: "https://xaviouk.github.io/corbe49-signature-mobile/auth.html"
-};
-let corbePcaPromise;
-async function ensureMsalLoaded() {
-  if (window.msal && window.msal.createNestablePublicClientApplication) return;
-  // Le runtime d’événement Outlook peut exécuter mobile.js sans avoir exécuté
-  // les balises <script> de mobile.html. Charger MSAL explicitement dans ce runtime.
-  if (typeof document === "undefined") {
-    throw new Error("Impossible de charger MSAL : aucun document disponible dans le runtime Outlook.");
-  }
-  await new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[data-corbe-msal="true"]');
-    if (existing) {
-      if (window.msal && window.msal.createNestablePublicClientApplication) return resolve();
-      existing.addEventListener("load", resolve, { once: true });
-      existing.addEventListener("error", () => reject(new Error("Échec du chargement de MSAL Browser.")), { once: true });
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://alcdn.msauth.net/browser/4.26.0/js/msal-browser.min.js";
-    script.async = true;
-    script.dataset.corbeMsal = "true";
-    script.onload = resolve;
-    script.onerror = () => reject(new Error("Échec du chargement de MSAL Browser."));
-    document.head.appendChild(script);
-  });
-  if (!window.msal || !window.msal.createNestablePublicClientApplication) {
-    throw new Error("MSAL a été chargé, mais NAA n’est pas disponible dans cette version.");
-  }
-}
-async function getCorbePca() {
-  await ensureMsalLoaded();
-  if (!corbePcaPromise) {
-    corbePcaPromise = window.msal.createNestablePublicClientApplication({
-      auth: {
-        clientId: CORBE_AUTH.clientId,
-        authority: CORBE_AUTH.authority,
-        redirectUri: CORBE_AUTH.redirectUri
-      },
-      cache: { cacheLocation: "localStorage" }
-    });
-  }
-  return corbePcaPromise;
-}
 
 const corbeSignatureTemplate = String.raw`<!DOCTYPE html>
 <html lang="fr">
@@ -353,62 +307,53 @@ function splitName(displayName, email) {
   const local = String(email || "").split("@")[0].replace(/[._-]+/g, " ").trim();
   return local.replace(/\b\w/g, c => c.toUpperCase());
 }
-async function getGraphProfile() {
-  try {
-    const pca = await getCorbePca();
-    const result = await pca.acquireTokenSilent({ scopes: ["User.Read"] });
-    const response = await fetch("https://graph.microsoft.com/v1.0/me?$select=displayName,jobTitle,mail,userPrincipalName,mobilePhone,businessPhones", {
-      headers: { Authorization: "Bearer " + result.accessToken }
-    });
-    if (!response.ok) throw new Error("Microsoft Graph a répondu " + response.status);
-    return await response.json();
-  } catch (e) {
-    // Un événement de composition ne doit pas ouvrir de fenêtre interactive. La signature
-    // reste utilisable avec les champs Outlook disponibles, et les champs Graph restent vides.
-    console.warn("Profil Graph indisponible en mode silencieux.", e);
-    return null;
-  }
-}
-function renderSignature(profile, graph) {
-  const email = String((graph && (graph.mail || graph.userPrincipalName)) || profile.emailAddress || "").trim().toLowerCase();
-  const displayName = splitName((graph && graph.displayName) || profile.displayName, email);
-  const jobTitle = String((graph && graph.jobTitle) || "").trim();
-  const phoneRaw = String((graph && graph.mobilePhone) || (graph && graph.businessPhones && graph.businessPhones[0]) || "").trim();
+function renderSignature(profile) {
+  // MODE DIAGNOSTIC SANS AUTHENTIFICATION : les champs de base viennent du profil Outlook.
+  // Aucun appel à Microsoft Graph et aucune demande de connexion/consentement.
+  const email = String(profile.emailAddress || "").trim().toLowerCase();
+  const displayName = splitName(profile.displayName, email) || "TEST CORBE49 — PROFIL OUTLOOK INDISPONIBLE";
+  const jobTitle = "TEST SIGNATURE — SANS AUTHENTIFICATION";
+  const phoneRaw = "06 28 96 01 12"; // valeur de test temporaire, à remplacer après validation
   const phone = formatPhone(phoneRaw);
   const phoneDigits = digits(phoneRaw);
-  const photoUrl = email ? "https://www.corbe-cuisine-pro.com/wp-content/uploads/" + encodeURIComponent(email) + "_.png" : "https://www.corbe-cuisine-pro.com/wp-content/uploads/xavier.gaillard@corbe49.fr_.png";
+  // Pas de photo de secours : photo seulement si l'e-mail Outlook est disponible.
+  const photoUrl = email ? "https://www.corbe-cuisine-pro.com/wp-content/uploads/" + encodeURIComponent(email) + "_.png" : "";
   const replacements = {
     "{{PHOTO_URL}}": photoUrl,
     "{{DISPLAY_NAME_HTML}}": escapeHtml(displayName).replace(/ /g, "&nbsp;"),
     "{{JOB_TITLE_HTML}}": escapeHtml(jobTitle),
     "{{EMAIL_ATTR}}": email,
-    "{{EMAIL_HTML}}": escapeHtml(email),
+    "{{EMAIL_HTML}}": escapeHtml(email || "E-MAIL OUTLOOK INDISPONIBLE"),
     "{{PHONE_DIGITS}}": phoneDigits,
     "{{PHONE_HTML}}": escapeHtml(phone)
   };
   let html = corbeSignatureTemplate;
   for (const [key, value] of Object.entries(replacements)) html = html.split(key).join(value);
-  return html;
+  // Repère très visible pour confirmer que le code HTML est réellement exécuté.
+  return '<div style="font-family:Arial,sans-serif;background:#fff3cd;border:2px solid #e30613;padding:6px;margin:0 0 8px 0;color:#202c39;font-size:12px"><b>TEST TECHNIQUE CORBÉ 49 — MODE SANS AUTHENTIFICATION</b><br>Si tu vois ce bandeau, le complément s’exécute et le HTML est injecté.</div>' + html;
 }
 
 function onNewMessageComposeHandler(event) {
-  const item = Office.context.mailbox.item;
-  const profile = Office.context.mailbox.userProfile || {};
-  getGraphProfile().then(graph => {
-    const signatureHtml = renderSignature(profile, graph);
+  try {
+    const item = Office.context.mailbox.item;
+    const profile = Office.context.mailbox.userProfile || {};
+    const signatureHtml = renderSignature(profile);
     item.body.setSignatureAsync(signatureHtml, { coercionType: Office.CoercionType.Html }, result => {
       if (result.status === Office.AsyncResultStatus.Failed) {
         console.log("Échec ajout signature CORBE 49 : " + result.error.message);
       }
       event.completed();
     });
-  }).catch(error => {
+  } catch (error) {
     console.log("Erreur de préparation signature CORBE 49 :", error);
-    const signatureHtml = renderSignature(profile, null);
-    item.body.setSignatureAsync(signatureHtml, { coercionType: Office.CoercionType.Html }, result => {
-      if (result.status === Office.AsyncResultStatus.Failed) console.log(result.error.message);
-      event.completed();
-    });
-  });
+    // En cas d’erreur avant l’insertion, afficher quand même un message visible dans le brouillon.
+    try {
+      Office.context.mailbox.item.body.setAsync(
+        '<div style="font-family:Arial,sans-serif;background:#f8d7da;border:2px solid #b02a37;padding:8px;color:#842029">TEST CORBÉ 49 : le gestionnaire s’est lancé, mais la signature a rencontré une erreur. Consulte les journaux du complément.</div>',
+        { coercionType: Office.CoercionType.Html },
+        () => event.completed()
+      );
+    } catch (_) { event.completed(); }
+  }
 }
 Office.actions.associate("onNewMessageComposeHandler", onNewMessageComposeHandler);
