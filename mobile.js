@@ -6,14 +6,7 @@
  */
 Office.onReady();
 
-const corbeSignatureTemplate = String.raw`<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Signature2026Corbe49</title>
-</head>
-<body style="margin:0;padding:0;background:transparent;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-
+const corbeSignatureTemplate = String.raw`
 <!-- V53 = V52 + largeur de la photo verrouillée (cellule et image : 78px minimum et maximum) : sur mobile, la photo était réduite et écrasée car c'est la seule colonne qui pouvait rétrécir.
      V52 = V51 + espace insécable entre prénom et nom (le nom ne passe plus sur deux lignes sur mobile) + blocage de la mise à l'échelle du texte.
      V51 = V50 + hauteurs de ligne exactes sur les images et les textes des coordonnées (Outlook ajoutait de la hauteur sous les images et autour des textes).
@@ -287,8 +280,6 @@ const corbeSignatureTemplate = String.raw`<!DOCTYPE html>
 </tr>
 </table>
 
-</body>
-</html>
 `;
 
 function escapeHtml(value) {
